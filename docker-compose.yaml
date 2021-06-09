@@ -1,0 +1,14 @@
+# @format
+
+version: "3"
+
+# volumes:
+#   file_data:
+
+services:
+  houses_script:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/usr/src/script
