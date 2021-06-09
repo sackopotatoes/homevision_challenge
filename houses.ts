@@ -3,7 +3,7 @@ import axios from "axios";
 import EventEmitter from "events";
 import { createWriteStream, ReadStream } from "fs";
 
-export interface House {
+interface House {
   id: number;
   address: string;
   homeowner: string;
@@ -14,6 +14,7 @@ export interface House {
 interface HouseGetterOpts {
   api_url: string;
   event_emitter: EventEmitter;
+  failed_request_event: string;
   timeout?: number;
 }
 
@@ -21,6 +22,7 @@ export function createHousesGetter({
   api_url,
   timeout = 0,
   event_emitter,
+  failed_request_event,
 }: HouseGetterOpts) {
   return async function getHousesByPage(page: number): Promise<House[]> {
     try {
@@ -30,7 +32,7 @@ export function createHousesGetter({
 
       return data.houses;
     } catch (err) {
-      event_emitter.emit("failed_request", page);
+      event_emitter.emit(failed_request_event, page);
       return [];
     }
   };

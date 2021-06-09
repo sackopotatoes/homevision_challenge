@@ -4,11 +4,13 @@ import { createHousesGetter, downloadHouseImage } from "./houses";
 
 const eventEmitter = new EventEmitter();
 
+// constants
 const API_URL =
   "http://app-homevision-staging.herokuapp.com/api_project/houses";
 const FIRST_N_PAGES = 10;
-const REQUEST_TIMEOUT = 10000;
+const REQUEST_TIMEOUT = 10000; //abort request after 10 seconds
 const MAX_RETRIES = 10;
+const FAILED_REQUEST_EVENT = "failed_request";
 
 // progress bar setup
 import ProgressBar from "progress";
@@ -22,10 +24,9 @@ interface PageRetries {
 }
 
 const page_retries: PageRetries = {};
-let pages_completed = 0;
 
 // Event Handler to retry failed requests
-eventEmitter.on("failed_request", (page) => {
+eventEmitter.on(FAILED_REQUEST_EVENT, (page: number) => {
   page_retries[page] = (page_retries[page] || 0) + 1;
 
   if (page_retries[page] <= MAX_RETRIES) {
@@ -41,6 +42,7 @@ const getHousesByPage = createHousesGetter({
   api_url: API_URL,
   timeout: REQUEST_TIMEOUT,
   event_emitter: eventEmitter,
+  failed_request_event: FAILED_REQUEST_EVENT,
 });
 
 async function processPage(page: number): Promise<void> {
@@ -51,7 +53,6 @@ async function processPage(page: number): Promise<void> {
 
     await Promise.all(downloadPromises);
 
-    pages_completed++;
     bar.tick();
 
     if (bar.complete) {
@@ -70,8 +71,8 @@ function getHouses(up_to_page: number = 10): Promise<void>[] {
   return responsePromises;
 }
 
-async function main(): Promise<void> {
-  await getHouses(FIRST_N_PAGES);
+function main(): void {
+  getHouses(FIRST_N_PAGES);
 }
 
 main();
